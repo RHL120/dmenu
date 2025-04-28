@@ -536,6 +536,10 @@ buttonpress(XEvent *ev) {
 		break;
 	case Button1:
 		if (lines > 0) {
+			if (e.y < bh) {
+				cleanup();
+				exit(0);
+			}
 			pos = bh;
 			for (i = curr; i != next; i = i->right) {
 				if (e.y > pos && e.y < pos + bh) {
@@ -547,6 +551,10 @@ buttonpress(XEvent *ev) {
 				pos += bh;
 			}
 		} else {
+			if (e.x < inputw) {
+				cleanup();
+				exit(0);
+			}
 			pos = curr->left? inputw + TEXTW("<") : inputw;
 			for (i = curr; i != next; i = i->right) {
 				if (e.x > pos && e.x < pos + TEXTW(i->text)) {
@@ -558,8 +566,8 @@ buttonpress(XEvent *ev) {
 				pos += TEXTW(i->text);
 			}
 		}
+		break;
 	default:
-		printf("%d\n", e.button);
 		return;
 	}
 	calcoffsets();

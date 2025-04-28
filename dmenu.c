@@ -544,6 +544,17 @@ buttonpress(XEvent *ev) {
 				}
 				pos += bh;
 			}
+		} else {
+			pos = curr->left? inputw + TEXTW("<") : inputw;
+			for (i = curr; i != next; i = i -> right) {
+				if (e.x > pos && e.x < pos + TEXTW(i->text)) {
+					if (sel == i)
+						chose(e.state);
+					sel = i;
+					break;
+				}
+				pos += TEXTW(i->text);
+			}
 		}
 	}
 	calcoffsets();

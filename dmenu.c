@@ -512,6 +512,26 @@ draw:
 }
 
 static void
+buttonpress(XEvent *ev) {
+	XButtonPressedEvent e = ev->xbutton;
+	switch (e.button) {	
+	case Button4:
+		if (prev) {
+			sel = curr = prev;
+			calcoffsets();
+			drawmenu();
+		}
+		break;
+	case Button5:
+		if (next) {
+			sel = curr = next;
+			calcoffsets();
+			drawmenu();
+		}
+	}
+}
+
+static void
 paste(void)
 {
 	char *p, *q;
@@ -584,6 +604,8 @@ run(void)
 		case KeyPress:
 			keypress(&ev.xkey);
 			break;
+		case ButtonPress:
+			buttonpress(&ev);
 		case SelectionNotify:
 			if (ev.xselection.property == utf8)
 				paste();
@@ -669,7 +691,7 @@ setup(void)
 	/* create menu window */
 	swa.override_redirect = True;
 	swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
-	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask;
+	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask | ButtonPressMask;
 	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, 0,
 	                    CopyFromParent, CopyFromParent, CopyFromParent,
 	                    CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);

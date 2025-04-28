@@ -305,6 +305,17 @@ movewordedge(int dir)
 }
 
 static void
+chose(unsigned int state) {
+		puts((sel && !(state & ShiftMask)) ? sel->text : text);
+		if (!(state & ControlMask)) {
+			cleanup();
+			exit(0);
+		}
+		if (sel)
+			sel->out = 1;
+}
+
+static void
 keypress(XKeyEvent *ev)
 {
 	char buf[32];
@@ -473,13 +484,7 @@ insert:
 		break;
 	case XK_Return:
 	case XK_KP_Enter:
-		puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
-		if (!(ev->state & ControlMask)) {
-			cleanup();
-			exit(0);
-		}
-		if (sel)
-			sel->out = 1;
+		chose(ev->state);
 		break;
 	case XK_Right:
 	case XK_KP_Right:
@@ -514,21 +519,35 @@ draw:
 static void
 buttonpress(XEvent *ev) {
 	XButtonPressedEvent e = ev->xbutton;
+	struct item *i;
+	int pos = 0;
 	switch (e.button) {	
 	case Button4:
 		if (prev) {
 			sel = curr = prev;
-			calcoffsets();
-			drawmenu();
 		}
 		break;
 	case Button5:
 		if (next) {
 			sel = curr = next;
-			calcoffsets();
-			drawmenu();
+		}
+		break;
+	case Button1:
+		if (lines > 0) {
+			pos = bh;
+			for (i = curr; i != next; i = i->right) {
+				if (e.y > pos && e.y < pos + bh) {
+					if (sel == i)
+						chose(e.state);
+					sel = i;
+					break;
+				}
+				pos += bh;
+			}
 		}
 	}
+	calcoffsets();
+	drawmenu();
 }
 
 static void

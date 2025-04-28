@@ -305,6 +305,17 @@ movewordedge(int dir)
 }
 
 static void
+chose(unsigned int state) {
+		puts((sel && !(state & ShiftMask)) ? sel->text : text);
+		if (!(state & ControlMask)) {
+			cleanup();
+			exit(0);
+		}
+		if (sel)
+			sel->out = 1;
+}
+
+static void
 keypress(XKeyEvent *ev)
 {
 	char buf[32];
@@ -473,13 +484,7 @@ insert:
 		break;
 	case XK_Return:
 	case XK_KP_Enter:
-		puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
-		if (!(ev->state & ControlMask)) {
-			cleanup();
-			exit(0);
-		}
-		if (sel)
-			sel->out = 1;
+		chose(ev->state);
 		break;
 	case XK_Right:
 	case XK_KP_Right:
@@ -508,6 +513,64 @@ insert:
 	}
 
 draw:
+	drawmenu();
+}
+
+static void
+buttonpress(XEvent *ev) {
+	XButtonPressedEvent e = ev->xbutton;
+	struct item *i;
+	int pos = 0;
+	switch (e.button) {	
+	case 6: /* left scroll */
+	case Button4:
+		if (prev) {
+			sel = curr = prev;
+		}
+		break;
+	case 7: /* right scroll */
+	case Button5:
+		if (next) {
+			sel = curr = next;
+		}
+		break;
+	case Button1:
+		if (lines > 0) {
+			if (e.y < bh) {
+				cleanup();
+				exit(0);
+			}
+			pos = bh;
+			for (i = curr; i != next; i = i->right) {
+				if (e.y > pos && e.y < pos + bh) {
+					if (sel == i)
+						chose(e.state);
+					sel = i;
+					break;
+				}
+				pos += bh;
+			}
+		} else {
+			if (e.x < inputw) {
+				cleanup();
+				exit(0);
+			}
+			pos = curr->left? inputw + TEXTW("<") : inputw;
+			for (i = curr; i != next; i = i->right) {
+				if (e.x > pos && e.x < pos + TEXTW(i->text)) {
+					if (sel == i)
+						chose(e.state);
+					sel = i;
+					break;
+				}
+				pos += TEXTW(i->text);
+			}
+		}
+		break;
+	default:
+		return;
+	}
+	calcoffsets();
 	drawmenu();
 }
 
@@ -584,6 +647,8 @@ run(void)
 		case KeyPress:
 			keypress(&ev.xkey);
 			break;
+		case ButtonPress:
+			buttonpress(&ev);
 		case SelectionNotify:
 			if (ev.xselection.property == utf8)
 				paste();
@@ -669,7 +734,7 @@ setup(void)
 	/* create menu window */
 	swa.override_redirect = True;
 	swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
-	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask;
+	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask | ButtonPressMask;
 	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, 0,
 	                    CopyFromParent, CopyFromParent, CopyFromParent,
 	                    CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);

@@ -522,11 +522,13 @@ buttonpress(XEvent *ev) {
 	struct item *i;
 	int pos = 0;
 	switch (e.button) {	
+	case 6: /* left scroll */
 	case Button4:
 		if (prev) {
 			sel = curr = prev;
 		}
 		break;
+	case 7: /* right scroll */
 	case Button5:
 		if (next) {
 			sel = curr = next;
@@ -546,7 +548,7 @@ buttonpress(XEvent *ev) {
 			}
 		} else {
 			pos = curr->left? inputw + TEXTW("<") : inputw;
-			for (i = curr; i != next; i = i -> right) {
+			for (i = curr; i != next; i = i->right) {
 				if (e.x > pos && e.x < pos + TEXTW(i->text)) {
 					if (sel == i)
 						chose(e.state);
@@ -556,6 +558,9 @@ buttonpress(XEvent *ev) {
 				pos += TEXTW(i->text);
 			}
 		}
+	default:
+		printf("%d\n", e.button);
+		return;
 	}
 	calcoffsets();
 	drawmenu();

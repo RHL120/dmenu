@@ -542,7 +542,7 @@ buttonpress(XEvent *ev) {
 			}
 			pos = bh;
 			for (i = curr; i != next; i = i->right) {
-				if (e.y > pos && e.y < pos + bh) {
+				if (e.y >= pos && e.y <= pos + bh) {
 					if (sel == i)
 						chose(e.state);
 					sel = i;
@@ -555,9 +555,9 @@ buttonpress(XEvent *ev) {
 				cleanup();
 				exit(0);
 			}
-			pos = curr->left? inputw + TEXTW("<") : inputw;
+			pos = inputw + TEXTW("<");
 			for (i = curr; i != next; i = i->right) {
-				if (e.x > pos && e.x < pos + TEXTW(i->text)) {
+				if (e.x >= pos && e.x <= pos + TEXTW(i->text)) {
 					if (sel == i)
 						chose(e.state);
 					sel = i;
